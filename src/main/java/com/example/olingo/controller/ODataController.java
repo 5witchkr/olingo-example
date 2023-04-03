@@ -1,12 +1,12 @@
-package com.example.olingo;
+package com.example.olingo.controller;
 
 
-import org.apache.olingo.commons.api.edm.provider.CsdlEdmProvider;
+import com.example.olingo.processor.BookCollectionProcessor;
+import com.example.olingo.processor.BookProcessor;
+import com.example.olingo.provider.BookEdmProvider;
 import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.ODataHttpHandler;
 import org.apache.olingo.server.api.ServiceMetadata;
-import org.apache.olingo.server.api.processor.EntityCollectionProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,24 +21,25 @@ public class ODataController {
 
     protected static final String URI = "/OData";
 
-    @Autowired
-    CsdlEdmProvider edmProvider;
+    private final BookCollectionProcessor bookCollectionProcessor;
+    private final BookProcessor bookProcessor;
+    private final BookEdmProvider bookEdmProvider;
 
-    @Autowired
-    EntityCollectionProcessor processor;
+    public ODataController(BookCollectionProcessor bookCollectionProcessor, BookProcessor bookProcessor, BookEdmProvider bookEdmProvider) {
+        this.bookCollectionProcessor = bookCollectionProcessor;
+        this.bookProcessor = bookProcessor;
+        this.bookEdmProvider = bookEdmProvider;
+    }
 
     @RequestMapping(value = "*")
     public void process(HttpServletRequest request, HttpServletResponse response) {
         OData odata = OData.newInstance();
-        ServiceMetadata edm = odata.createServiceMetadata(edmProvider,
+        ServiceMetadata edm = odata.createServiceMetadata(bookEdmProvider,
                 new ArrayList<>());
         ODataHttpHandler handler = odata.createHandler(edm);
-        handler.register(processor);
+        handler.register(bookCollectionProcessor);
+        handler.register(bookProcessor);
         handler.process(new HttpServletRequestWrapper(request) {
-            // Spring MVC matches the whole path as the servlet path
-            // Olingo wants just the prefix, ie upto /OData/V1.0, so that it
-            // can parse the rest of it as an OData path. So we need to override
-            // getServletPath()
             @Override
             public String getServletPath() {
                 return ODataController.URI;
