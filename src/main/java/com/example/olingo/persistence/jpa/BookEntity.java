@@ -1,10 +1,7 @@
 package com.example.olingo.persistence.jpa;
 
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 public class BookEntity {
@@ -14,11 +11,16 @@ public class BookEntity {
     private String title;
     private Integer page;
 
+    @ManyToOne
+    @JoinColumn(name = "categoryId")
+    private CategoryEntity category;
+
     public BookEntity(){}
 
-    public BookEntity(String title, Integer page){
+    public BookEntity(String title, Integer page, CategoryEntity category){
         this.title = title;
         this.page = page;
+        this.category=category;
     }
 
     public Long getId() {
@@ -30,5 +32,8 @@ public class BookEntity {
 
     public Integer getPage() {
         return page;
+    }
+    public CategoryEntity getCategory() {
+        return category;
     }
 }

@@ -59,7 +59,8 @@ public class Storage {
         if (edmEntitySet.getName().equals(ConstModel.ES_BOOKS_NAME)) {
             BookEntity bookEntity = new BookEntity(
                     (String) requestEntity.getProperty("Title").getValue(),
-                    (Integer) requestEntity.getProperty("Page").getValue()
+                    (Integer) requestEntity.getProperty("Page").getValue(),
+                    categoryJpaRepository.findByName((String) requestEntity.getProperty("Category").getValue())
             );
             BookEntity savedBookEntity = bookJpaRepository.save(bookEntity);
             return jpaBookToODataBook(savedBookEntity);
@@ -87,9 +88,9 @@ public class Storage {
         CategoryEntity category2 = new CategoryEntity("개발");
         categoryJpaRepository.save(category1);
         categoryJpaRepository.save(category2);
-        BookEntity book1 = new BookEntity("이펙티브자바",100);
-        BookEntity book2 = new BookEntity("콩쥐팥쥐",200);
-        BookEntity book3 = new BookEntity("데이터중심앱설계",300);
+        BookEntity book1 = new BookEntity("이펙티브자바",100, category2);
+        BookEntity book2 = new BookEntity("콩쥐팥쥐",200, category1);
+        BookEntity book3 = new BookEntity("데이터중심앱설계",300, category2);
         bookJpaRepository.save(book1);
         bookJpaRepository.save(book2);
         bookJpaRepository.save(book3);
@@ -143,7 +144,8 @@ public class Storage {
         return new Entity()
                 .addProperty(new Property(null, "ID", ValueType.PRIMITIVE, bookEntity.getId()))
                 .addProperty(new Property(null, "Title", ValueType.PRIMITIVE, bookEntity.getTitle()))
-                .addProperty(new Property(null, "Page", ValueType.PRIMITIVE, bookEntity.getPage()));
+                .addProperty(new Property(null, "Page", ValueType.PRIMITIVE, bookEntity.getPage()))
+                .addProperty(new Property(null, "Category", ValueType.PRIMITIVE, bookEntity.getCategory().getName()));
     }
 
     private URI createId(String entitySetName, Object id) {
