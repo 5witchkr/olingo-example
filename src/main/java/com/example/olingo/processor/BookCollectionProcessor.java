@@ -4,12 +4,11 @@ import com.example.olingo.persistence.Storage;
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
-import org.apache.olingo.commons.api.edm.EdmEntitySet;
-import org.apache.olingo.commons.api.edm.EdmEntityType;
-import org.apache.olingo.commons.api.edm.EdmProperty;
+import org.apache.olingo.commons.api.edm.*;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
+import org.apache.olingo.commons.core.edm.EdmEntitySetImpl;
 import org.apache.olingo.server.api.*;
 import org.apache.olingo.server.api.processor.EntityCollectionProcessor;
 import org.apache.olingo.server.api.serializer.EntityCollectionSerializerOptions;
@@ -62,6 +61,25 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
             UriResourceEntitySet uriResourceEntitySet1 = (UriResourceEntitySet) resourcesPaths.get(0);
             EdmEntitySet edmEntitySet1 = uriResourceEntitySet1.getEntitySet();
 
+            UriResource lastSegment = resourcesPaths.get(1);
+            UriResourceNavigation uriResourceNavigation = (UriResourceNavigation) lastSegment;
+            EdmNavigationProperty edmNavigationProperty = uriResourceNavigation.getProperty();
+
+            String navPropName = edmNavigationProperty.getName();
+            EdmBindingTarget edmBindingTarget = edmEntitySet.getRelatedBindingTarget(navPropName);
+            if (edmBindingTarget == null) {
+                throw new ODataApplicationException("Not supported.",
+                        HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ROOT);
+            }
+
+            if (edmBindingTarget instanceof EdmEntitySet) {
+                edmEntitySet = (EdmEntitySet) edmBindingTarget;
+            } else {
+                throw new ODataApplicationException("Not supported.",
+                        HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ROOT);
+            }
+
+
             List<UriParameter> keyPredicates = uriResourceEntitySet1.getKeyPredicates();
             entityCollection = storage.readRelateEntitySetData(edmEntitySet1, keyPredicates);
         }
@@ -80,7 +98,7 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
             }
         }
 
-        // 3rd apply $orderby
+        //apply $orderby
         OrderByOption orderByOption = uriInfo.getOrderByOption();
         if (orderByOption != null) {
             List<OrderByItem> orderItemList = orderByOption.getOrders();
