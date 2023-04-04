@@ -110,34 +110,31 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
                     EdmProperty edmProperty = ((UriResourcePrimitiveProperty)uriResource).getProperty();
                     final String sortPropertyName = edmProperty.getName();
 
-                    Collections.sort(entityList, new Comparator<Entity>() {
+                    Collections.sort(entityList, (entity1, entity2) -> {
+                        int compareResult = 0;
 
-                        public int compare(Entity entity1, Entity entity2) {
-                            int compareResult = 0;
+                        if(sortPropertyName.equals("ID")){
+                            Integer integer1 = (Integer) entity1.getProperty(sortPropertyName).getValue();
+                            Integer integer2 = (Integer) entity2.getProperty(sortPropertyName).getValue();
 
-                            if(sortPropertyName.equals("ID")){
-                                Integer integer1 = (Integer) entity1.getProperty(sortPropertyName).getValue();
-                                Integer integer2 = (Integer) entity2.getProperty(sortPropertyName).getValue();
+                            compareResult = integer1.compareTo(integer2);
+                        } else if (sortPropertyName.equals("Page")) {
+                            Integer integer1 = (Integer) entity1.getProperty(sortPropertyName).getValue();
+                            Integer integer2 = (Integer) entity2.getProperty(sortPropertyName).getValue();
 
-                                compareResult = integer1.compareTo(integer2);
-                            } else if (sortPropertyName.equals("Page")) {
-                                Integer integer1 = (Integer) entity1.getProperty(sortPropertyName).getValue();
-                                Integer integer2 = (Integer) entity2.getProperty(sortPropertyName).getValue();
+                            compareResult = integer1.compareTo(integer2);
+                        } else{
+                            String propertyValue1 = (String) entity1.getProperty(sortPropertyName).getValue();
+                            String propertyValue2 = (String) entity2.getProperty(sortPropertyName).getValue();
 
-                                compareResult = integer1.compareTo(integer2);
-                            } else{
-                                String propertyValue1 = (String) entity1.getProperty(sortPropertyName).getValue();
-                                String propertyValue2 = (String) entity2.getProperty(sortPropertyName).getValue();
-
-                                compareResult = propertyValue1.compareTo(propertyValue2);
-                            }
-                            //desc
-                            if(orderByItem.isDescending()){
-                                return - compareResult;
-                            }
-
-                            return compareResult;
+                            compareResult = propertyValue1.compareTo(propertyValue2);
                         }
+                        //desc
+                        if(orderByItem.isDescending()){
+                            return - compareResult;
+                        }
+
+                        return compareResult;
                     });
                 }
             }
