@@ -8,7 +8,7 @@ import org.apache.olingo.commons.api.edm.*;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
-import org.apache.olingo.commons.core.edm.EdmEntitySetImpl;
+
 import org.apache.olingo.server.api.*;
 import org.apache.olingo.server.api.processor.EntityCollectionProcessor;
 import org.apache.olingo.server.api.serializer.EntityCollectionSerializerOptions;
@@ -43,7 +43,6 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
     @Override
     public void readEntityCollection(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType responseFormat)
             throws ODataApplicationException, ODataLibraryException {
-
 
         //요청된 EntitySet을 (구문 분석된 서비스 URI의 표현인) uriInfo 객체에서 검색합니다.
         List<UriResource> resourcesPaths = uriInfo.getUriResourceParts();
@@ -102,7 +101,7 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
         OrderByOption orderByOption = uriInfo.getOrderByOption();
         if (orderByOption != null) {
             List<OrderByItem> orderItemList = orderByOption.getOrders();
-            final OrderByItem orderByItem = orderItemList.get(0); // in our example we support only one
+            final OrderByItem orderByItem = orderItemList.get(0);
             Expression expression = orderByItem.getExpression();
             if(expression instanceof Member){
                 UriInfoResource resourcePath = ((Member)expression).getResourcePath();
@@ -111,10 +110,8 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
                     EdmProperty edmProperty = ((UriResourcePrimitiveProperty)uriResource).getProperty();
                     final String sortPropertyName = edmProperty.getName();
 
-                    // do the sorting for the list of entities
                     Collections.sort(entityList, new Comparator<Entity>() {
 
-                        // we delegate the sorting to the native sorter of Integer and String
                         public int compare(Entity entity1, Entity entity2) {
                             int compareResult = 0;
 
@@ -134,10 +131,9 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
 
                                 compareResult = propertyValue1.compareTo(propertyValue2);
                             }
-
-                            // if 'desc' is specified in the URI, change the order of the list
+                            //desc
                             if(orderByItem.isDescending()){
-                                return - compareResult; // just convert the result to negative value to change the order
+                                return - compareResult;
                             }
 
                             return compareResult;
@@ -155,7 +151,6 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
                 if(skipNumber <= entityList.size()) {
                     entityList = entityList.subList(skipNumber, entityList.size());
                 } else {
-                    // The client skipped all entities
                     entityList.clear();
                 }
             } else {
@@ -170,13 +165,12 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
             if (topNumber >= 0) {
                 if(topNumber <= entityList.size()) {
                     entityList = entityList.subList(0, topNumber);
-                }  // else the client has requested more entities than available => return what we have
+                }
             } else {
                 throw new ODataApplicationException("Invalid value for $top", HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ROOT);
             }
         }
 
-        // after applying the query options, create EntityCollection based on the reduced list
         for(Entity entity : entityList){
             returnEntityCollection.getEntities().add(entity);
         }
@@ -184,7 +178,7 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
         //select
         SelectOption selectOption = uriInfo.getSelectOption();
 
-        //요청된 형식(JSON)에 따라 직렬화기를 생성합니다.
+        //요청된 형식(JSON)에 따라 직렬화
         ODataSerializer serializer = oData.createSerializer(responseFormat);
 
         //콘텐츠를 직렬화합니다: 엔티티셋 객체에서 입력 스트림으로 변환합니다.

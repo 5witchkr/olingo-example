@@ -46,29 +46,26 @@ public class BookProcessor implements EntityProcessor {
     public void readEntity(ODataRequest request, ODataResponse response,
                            UriInfo uriInfo, ContentType responseFormat)
             throws ODataApplicationException, SerializerException {
-
-        // 1. retrieve the Entity Type
         List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
-        // Note: only in our example we can assume that the first segment is the EntitySet
+
         UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
         EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
 
-        // 2. retrieve the data from backend
         List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
         Entity entity = storage.readEntityData(edmEntitySet, keyPredicates);
 
-        // 3. serialize
+        //serialize
         EdmEntityType entityType = edmEntitySet.getEntityType();
 
         ContextURL contextUrl = ContextURL.with().entitySet(edmEntitySet).build();
-        // expand and select currently not supported
+
         EntitySerializerOptions options = EntitySerializerOptions.with().contextURL(contextUrl).build();
 
         ODataSerializer serializer = oData.createSerializer(responseFormat);
         SerializerResult serializerResult = serializer.entity(serviceMetadata, entityType, entity, options);
         InputStream entityStream = serializerResult.getContent();
 
-        //4. configure the response object
+        //response object
         response.setContent(entityStream);
         response.setStatusCode(HttpStatusCode.OK.getStatusCode());
         response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
@@ -78,12 +75,10 @@ public class BookProcessor implements EntityProcessor {
     public void createEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType requestFormat, ContentType responseFormat)
             throws ODataApplicationException, ODataLibraryException {
         List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
-        // To get the entity set we have to interpret all URI segments
         if (!(resourcePaths.get(0) instanceof UriResourceEntitySet)) {
             throw new ODataApplicationException("Invalid resource type for first segment.",
                     HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
         }
-
         UriResourceEntitySet uriResource = (UriResourceEntitySet) resourcePaths.get(0);
 
         EdmEntitySet edmEntitySet = uriResource.getEntitySet();
@@ -112,45 +107,36 @@ public class BookProcessor implements EntityProcessor {
     public void updateEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo,
                              ContentType requestFormat, ContentType responseFormat)
             throws ODataApplicationException, DeserializerException, SerializerException {
-
-        // 1. Retrieve the entity set which belongs to the requested entity
         List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
-        // Note: only in our example we can assume that the first segment is the EntitySet
+
         UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
         EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
         EdmEntityType edmEntityType = edmEntitySet.getEntityType();
 
-        // 2. update the data in backend
-        // 2.1. retrieve the payload from the PUT request for the entity to be updated
         InputStream requestInputStream = request.getBody();
         ODataDeserializer deserializer = this.oData.createDeserializer(requestFormat);
         DeserializerResult result = deserializer.entity(requestInputStream, edmEntityType);
         Entity requestEntity = result.getEntity();
-        // 2.2 do the modification in backend
+
         List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
-        // Note that this updateEntity()-method is invoked for both PUT or PATCH operations
+
         HttpMethod httpMethod = request.getMethod();
         storage.updateEntityData(edmEntitySet, keyPredicates, requestEntity, httpMethod);
 
-        //3. configure the response object
         response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
     }
 
     @Override
     public void deleteEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo)
             throws ODataApplicationException {
-
-        // 1. Retrieve the entity set which belongs to the requested entity
         List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
-        // Note: only in our example we can assume that the first segment is the EntitySet
+
         UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
         EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
 
-        // 2. delete the data in backend
         List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
         storage.deleteEntityData(edmEntitySet, keyPredicates);
 
-        //3. configure the response object
         response.setStatusCode(HttpStatusCode.NO_CONTENT.getStatusCode());
     }
 }

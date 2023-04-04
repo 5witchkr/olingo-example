@@ -11,7 +11,7 @@ import java.util.List;
 
 @Component
 public class BookEdmProvider extends CsdlAbstractEdmProvider {
-    //CsdlEntityType을 모델링하기 위해 다음과 같은 메타데이터를 제공해야 합니다.
+    //CsdlEntityType을 모델링하기 위해 메타데이터를 제공
     @Override
     public CsdlEntityType getEntityType(FullQualifiedName entityTypeName) {
         CsdlEntityType entityType = null;
@@ -24,7 +24,7 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
     }
 
 
-    //엔티티 집합은 OData 서비스를 사용하여 데이터를 요청할 때 중요한 리소스입니다.
+    //엔티티Set은 OData 서비스를 사용하여 데이터를 요청할 때 중요한 리소스입니다.
     //이 예제에서는 제품 목록을 제공할 것으로 예상되는 다음 URL을 호출합니다
     @Override
     public CsdlEntitySet getEntitySet(FullQualifiedName entityContainer, String entitySetName){
@@ -107,7 +107,7 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
         CsdlPropertyRef propertyRef = new CsdlPropertyRef();
         propertyRef.setName("ID");
 
-        // navigation property: one-to-many
+        // navigation property
         CsdlNavigationProperty navProp = new CsdlNavigationProperty().setName("Books")
                 .setType(ConstModel.ET_BOOK_FQN).setCollection(true).setPartner("Category");
         List<CsdlNavigationProperty> navPropList = new ArrayList<>();
@@ -156,8 +156,8 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
 
         // navigation
         CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
-        navPropBinding.setTarget("Books"); // the target entity set, where the navigation property points to
-        navPropBinding.setPath("Books"); // the path from entity type to navigation property
+        navPropBinding.setTarget("Books");
+        navPropBinding.setPath("Books");
         List<CsdlNavigationPropertyBinding> navPropBindingList = new ArrayList<>();
         navPropBindingList.add(navPropBinding);
         entitySet.setNavigationPropertyBindings(navPropBindingList);
@@ -171,8 +171,8 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
         entitySet.setType(ConstModel.ET_BOOK_FQN);
         // navigation
         CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
-        navPropBinding.setTarget("Categories"); // the target entity set, where the navigation property points to
-        navPropBinding.setPath("Category"); // the path from entity type to navigation property
+        navPropBinding.setTarget("Categories");
+        navPropBinding.setPath("Category");
         List<CsdlNavigationPropertyBinding> navPropBindingList = new ArrayList<>();
         navPropBindingList.add(navPropBinding);
         entitySet.setNavigationPropertyBindings(navPropBindingList);
