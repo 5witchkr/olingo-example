@@ -44,6 +44,15 @@ public class Storage {
         return null;
     }
 
+    public EntityCollection readRelateEntitySetData(EdmEntitySet edmEntitySet1 , List<UriParameter> uriParameters) {
+        EdmEntityType edmEntityType1 = edmEntitySet1.getEntityType();
+        if(edmEntityType1.getName().equals(ConstModel.ET_CATEGORY_NAME)){
+            return getRelateBooks(edmEntityType1, uriParameters);
+        }
+        return null;
+    }
+
+
     public Entity readEntityData(EdmEntitySet edmEntitySet, List<UriParameter> keyParams) throws ODataApplicationException {
         EdmEntityType edmEntityType = edmEntitySet.getEntityType();
         if(edmEntityType.getName().equals(ConstModel.ET_BOOK_NAME)){
@@ -99,6 +108,19 @@ public class Storage {
     private EntityCollection getBooks(){
         EntityCollection retEntitySet = new EntityCollection();
         for(BookEntity bookEntity : bookJpaRepository.findAll()){
+            Entity e = jpaBookToODataBook(bookEntity);
+            e.setId(createId("Books", 1));
+            retEntitySet.getEntities().add(e);
+        }
+        return retEntitySet;
+    }
+
+    private EntityCollection getRelateBooks(EdmEntityType edmEntityType, List<UriParameter> keyParams) {
+        EntityCollection retEntitySet = new EntityCollection();
+        for(BookEntity bookEntity : bookJpaRepository.findByCategory(
+                categoryJpaRepository.findById(Long.valueOf(keyParams.get(0).getText()))
+                        .orElseThrow(() -> new EntityNotFoundException("없음"))
+        )){
             Entity e = jpaBookToODataBook(bookEntity);
             e.setId(createId("Books", 1));
             retEntitySet.getEntities().add(e);

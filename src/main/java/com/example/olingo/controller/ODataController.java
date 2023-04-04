@@ -32,7 +32,22 @@ public class ODataController {
     }
 
     @RequestMapping(value = "*")
-    public void process(HttpServletRequest request, HttpServletResponse response) {
+    public void process1(HttpServletRequest request, HttpServletResponse response) {
+        OData odata = OData.newInstance();
+        ServiceMetadata edm = odata.createServiceMetadata(bookEdmProvider,
+                new ArrayList<>());
+        ODataHttpHandler handler = odata.createHandler(edm);
+        handler.register(bookCollectionProcessor);
+        handler.register(bookProcessor);
+        handler.process(new HttpServletRequestWrapper(request) {
+            @Override
+            public String getServletPath() {
+                return ODataController.URI;
+            }
+        }, response);
+    }
+    @RequestMapping(value = "/*/*")
+    public void process2(HttpServletRequest request, HttpServletResponse response) {
         OData odata = OData.newInstance();
         ServiceMetadata edm = odata.createServiceMetadata(bookEdmProvider,
                 new ArrayList<>());
