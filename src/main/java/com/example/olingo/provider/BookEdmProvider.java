@@ -127,6 +127,7 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
         CsdlProperty id = new CsdlProperty().setName("ID").setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
         CsdlProperty title = new CsdlProperty().setName("Title").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
         CsdlProperty page = new CsdlProperty().setName("Page").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
+        CsdlProperty category = new CsdlProperty().setName("CategoryName").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
 
         //키 요소에 대한 PropertyRef 생성
         CsdlPropertyRef propertyRef = new CsdlPropertyRef();
@@ -141,7 +142,7 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
         //config EntityType
         entityType = new CsdlEntityType();
         entityType.setName(ConstModel.ET_BOOK_NAME);
-        entityType.setProperties(Arrays.asList(id, title , page));
+        entityType.setProperties(Arrays.asList(id, title , page, category));
         entityType.setKey(Arrays.asList(propertyRef));
         entityType.setNavigationProperties(navPropList);
         return entityType;

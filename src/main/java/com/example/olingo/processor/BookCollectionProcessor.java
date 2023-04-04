@@ -14,14 +14,8 @@ import org.apache.olingo.server.api.processor.EntityCollectionProcessor;
 import org.apache.olingo.server.api.serializer.EntityCollectionSerializerOptions;
 import org.apache.olingo.server.api.serializer.ODataSerializer;
 import org.apache.olingo.server.api.serializer.SerializerResult;
-import org.apache.olingo.server.api.uri.UriInfo;
-import org.apache.olingo.server.api.uri.UriParameter;
-import org.apache.olingo.server.api.uri.UriResource;
-import org.apache.olingo.server.api.uri.UriResourceEntitySet;
-import org.apache.olingo.server.api.uri.queryoption.CountOption;
-import org.apache.olingo.server.api.uri.queryoption.SelectOption;
-import org.apache.olingo.server.api.uri.queryoption.SkipOption;
-import org.apache.olingo.server.api.uri.queryoption.TopOption;
+import org.apache.olingo.server.api.uri.*;
+import org.apache.olingo.server.api.uri.queryoption.*;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

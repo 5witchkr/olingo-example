@@ -69,7 +69,7 @@ public class Storage {
             BookEntity bookEntity = new BookEntity(
                     (String) requestEntity.getProperty("Title").getValue(),
                     (Integer) requestEntity.getProperty("Page").getValue(),
-                    categoryJpaRepository.findByName((String) requestEntity.getProperty("Category").getValue())
+                    categoryJpaRepository.findByName((String) requestEntity.getProperty("CategoryName").getValue())
             );
             BookEntity savedBookEntity = bookJpaRepository.save(bookEntity);
             return jpaBookToODataBook(savedBookEntity);
@@ -167,7 +167,7 @@ public class Storage {
                 .addProperty(new Property(null, "ID", ValueType.PRIMITIVE, bookEntity.getId()))
                 .addProperty(new Property(null, "Title", ValueType.PRIMITIVE, bookEntity.getTitle()))
                 .addProperty(new Property(null, "Page", ValueType.PRIMITIVE, bookEntity.getPage()))
-                .addProperty(new Property(null, "Category", ValueType.PRIMITIVE, bookEntity.getCategory().getName()));
+                .addProperty(new Property(null, "CategoryName", ValueType.PRIMITIVE, bookEntity.getCategory().getName()));
     }
 
     private URI createId(String entitySetName, Object id) {
