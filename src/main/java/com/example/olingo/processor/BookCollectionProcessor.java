@@ -6,6 +6,7 @@ import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
@@ -16,8 +17,12 @@ import org.apache.olingo.server.api.serializer.ODataSerializer;
 import org.apache.olingo.server.api.serializer.SerializerResult;
 import org.apache.olingo.server.api.uri.*;
 import org.apache.olingo.server.api.uri.queryoption.*;
+import org.apache.olingo.server.api.uri.queryoption.expression.Expression;
+import org.apache.olingo.server.api.uri.queryoption.expression.Member;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -26,17 +31,14 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
     private OData oData;
     private ServiceMetadata serviceMetadata;
     private final Storage storage;
-
     public BookCollectionProcessor(Storage storage) {
         this.storage = storage;
     }
-
     @Override
     public void init(OData oData, ServiceMetadata serviceMetadata) {
         this.oData = oData;
         this.serviceMetadata = serviceMetadata;
     }
-
     //엔티티 컬렉션에 대한 HTTP GET 연산으로 OData 서비스가 호출될 때 이 readEntityCollection(...) 메서드가 호출된다
     //readEntityCollection(...) 메서드는 백엔드(예: 데이터베이스)에서 데이터를 "읽기"하고 OData 서비스를 호출하는 사용자에게 데이터를 전달하는 데 사용됩니다.
     @Override
@@ -49,7 +51,7 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
         UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcesPaths.get(0);
         EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
 
-        //todo relatedEntityCollection 확인을 위한 segmentCount
+        //relatedEntityCollection 확인을 위한 segmentCount
         int segmentCount = resourcesPaths.size();
 
         EntityCollection entityCollection = null;
@@ -57,11 +59,7 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
             //요청된 엔티티셋 이름에 대한 데이터를 백엔드에서 가져옵니다.
             entityCollection = storage.readEntitySetData(edmEntitySet);
         } else if (segmentCount == 2) {
-            UriResource firstSegment = resourcesPaths.get(0);
-            UriResource lastSegment = resourcesPaths.get(1);
-
             UriResourceEntitySet uriResourceEntitySet1 = (UriResourceEntitySet) resourcesPaths.get(0);
-
             EdmEntitySet edmEntitySet1 = uriResourceEntitySet1.getEntitySet();
 
             List<UriParameter> keyPredicates = uriResourceEntitySet1.getKeyPredicates();
@@ -72,12 +70,62 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
         List<Entity> entityList = entityCollection.getEntities();
         EntityCollection returnEntityCollection = new EntityCollection();
 
+
         //count handler 원래 엔티티 수를 반환하고, $top 및 $skip을 무시합니다.
         CountOption countOption = uriInfo.getCountOption();
         if (countOption != null) {
             boolean isCount = countOption.getValue();
             if(isCount){
                 returnEntityCollection.setCount(entityList.size());
+            }
+        }
+
+        // 3rd apply $orderby
+        OrderByOption orderByOption = uriInfo.getOrderByOption();
+        if (orderByOption != null) {
+            List<OrderByItem> orderItemList = orderByOption.getOrders();
+            final OrderByItem orderByItem = orderItemList.get(0); // in our example we support only one
+            Expression expression = orderByItem.getExpression();
+            if(expression instanceof Member){
+                UriInfoResource resourcePath = ((Member)expression).getResourcePath();
+                UriResource uriResource = resourcePath.getUriResourceParts().get(0);
+                if (uriResource instanceof UriResourcePrimitiveProperty) {
+                    EdmProperty edmProperty = ((UriResourcePrimitiveProperty)uriResource).getProperty();
+                    final String sortPropertyName = edmProperty.getName();
+
+                    // do the sorting for the list of entities
+                    Collections.sort(entityList, new Comparator<Entity>() {
+
+                        // we delegate the sorting to the native sorter of Integer and String
+                        public int compare(Entity entity1, Entity entity2) {
+                            int compareResult = 0;
+
+                            if(sortPropertyName.equals("ID")){
+                                Integer integer1 = (Integer) entity1.getProperty(sortPropertyName).getValue();
+                                Integer integer2 = (Integer) entity2.getProperty(sortPropertyName).getValue();
+
+                                compareResult = integer1.compareTo(integer2);
+                            } else if (sortPropertyName.equals("Page")) {
+                                Integer integer1 = (Integer) entity1.getProperty(sortPropertyName).getValue();
+                                Integer integer2 = (Integer) entity2.getProperty(sortPropertyName).getValue();
+
+                                compareResult = integer1.compareTo(integer2);
+                            } else{
+                                String propertyValue1 = (String) entity1.getProperty(sortPropertyName).getValue();
+                                String propertyValue2 = (String) entity2.getProperty(sortPropertyName).getValue();
+
+                                compareResult = propertyValue1.compareTo(propertyValue2);
+                            }
+
+                            // if 'desc' is specified in the URI, change the order of the list
+                            if(orderByItem.isDescending()){
+                                return - compareResult; // just convert the result to negative value to change the order
+                            }
+
+                            return compareResult;
+                        }
+                    });
+                }
             }
         }
 

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import javax.persistence.EntityNotFoundException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -87,22 +88,6 @@ public class Storage {
     }
 
     public void deleteEntityData(EdmEntitySet edmEntitySet, List<UriParameter> keyPredicates) {
-    }
-
-    private void initSampleData(){
-
-        // add some sample product entities
-        //sample entities
-        CategoryEntity category1 = new CategoryEntity("동화");
-        CategoryEntity category2 = new CategoryEntity("개발");
-        categoryJpaRepository.save(category1);
-        categoryJpaRepository.save(category2);
-        BookEntity book1 = new BookEntity("이펙티브자바",100, category2);
-        BookEntity book2 = new BookEntity("콩쥐팥쥐",200, category1);
-        BookEntity book3 = new BookEntity("데이터중심앱설계",300, category2);
-        bookJpaRepository.save(book1);
-        bookJpaRepository.save(book2);
-        bookJpaRepository.save(book3);
     }
 
     private EntityCollection getBooks(){
@@ -176,5 +161,26 @@ public class Storage {
         } catch (URISyntaxException e) {
             throw new ODataRuntimeException("Unable to create id for entity: " + entitySetName, e);
         }
+    }
+
+    private void initSampleData(){
+
+        // add some sample product entities
+        //sample entities
+        CategoryEntity category1 = new CategoryEntity("동화");
+        CategoryEntity category2 = new CategoryEntity("개발");
+        CategoryEntity category3 = new CategoryEntity("철학");
+        CategoryEntity category4 = new CategoryEntity("소설");
+        categoryJpaRepository.saveAll(Arrays.asList(category1,category2,category3,category4));
+        BookEntity book1 = new BookEntity("이펙티브자바",100, category2);
+        BookEntity book2 = new BookEntity("콩쥐팥쥐",200, category1);
+        BookEntity book3 = new BookEntity("데이터중심앱설계",300, category2);
+        BookEntity book4 = new BookEntity("리펙터링",100, category2);
+        BookEntity book5 = new BookEntity("자바의정석",200, category2);
+        BookEntity book6 = new BookEntity("셜록홈즈",300, category4);
+        BookEntity book7 = new BookEntity("해리포터",100, category4);
+        BookEntity book8 = new BookEntity("정의란무엇인가",200, category3);
+        BookEntity book9 = new BookEntity("흥부와놀부",300, category1);
+        bookJpaRepository.saveAll(Arrays.asList(book1,book2,book3,book4,book5,book6,book7,book8,book9));
     }
 }
