@@ -16,24 +16,91 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
     public CsdlEntityType getEntityType(FullQualifiedName entityTypeName) {
         CsdlEntityType entityType = null;
         if(entityTypeName.equals(ConstModel.ET_BOOK_FQN)){
-            entityType = getBookEntityType();
+            CsdlEntityType entityType1;
+            CsdlProperty id = new CsdlProperty().setName("ID").setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
+            CsdlProperty title = new CsdlProperty().setName("Title").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+            CsdlProperty page = new CsdlProperty().setName("Page").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
+            CsdlProperty category = new CsdlProperty().setName("CategoryName").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+
+            //키 요소에 대한 PropertyRef 생성
+            CsdlPropertyRef propertyRef = new CsdlPropertyRef();
+            propertyRef.setName("ID");
+
+            //nav
+            CsdlNavigationProperty navProp = new CsdlNavigationProperty().setName("Category")
+                    .setType(ConstModel.ET_CATEGORY_FQN).setNullable(false).setPartner("Books");
+            List<CsdlNavigationProperty> navPropList = new ArrayList<>();
+            navPropList.add(navProp);
+
+            //config EntityType
+            entityType1 = new CsdlEntityType();
+            entityType1.setName(ConstModel.ET_BOOK_NAME);
+            entityType1.setProperties(Arrays.asList(id, title , page, category));
+            entityType1.setKey(Arrays.asList(propertyRef));
+            entityType1.setNavigationProperties(navPropList);
+            entityType = entityType1;
         }else if (entityTypeName.equals(ConstModel.ET_CATEGORY_FQN)) {
-            entityType = getCategoryEntityType();
+            CsdlEntityType entityType1;
+            // create EntityType properties
+            CsdlProperty id = new CsdlProperty().setName("ID")
+                    .setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
+            CsdlProperty name = new CsdlProperty().setName("Name")
+                    .setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
+
+            // create PropertyRef for Key element
+            CsdlPropertyRef propertyRef = new CsdlPropertyRef();
+            propertyRef.setName("ID");
+
+            // navigation property
+            CsdlNavigationProperty navProp = new CsdlNavigationProperty().setName("Books")
+                    .setType(ConstModel.ET_BOOK_FQN).setCollection(true).setPartner("Category");
+            List<CsdlNavigationProperty> navPropList = new ArrayList<>();
+            navPropList.add(navProp);
+
+            // configure EntityType
+            entityType1 = new CsdlEntityType();
+            entityType1.setName(ConstModel.ET_CATEGORY_NAME);
+            entityType1.setProperties(Arrays.asList(id, name));
+            entityType1.setKey(Arrays.asList(propertyRef));
+            entityType1.setNavigationProperties(navPropList);
+            entityType = entityType1;
         }
         return entityType;
     }
 
 
     //엔티티Set은 OData 서비스를 사용하여 데이터를 요청할 때 중요한 리소스입니다.
-    //이 예제에서는 제품 목록을 제공할 것으로 예상되는 다음 URL을 호출합니다
     @Override
     public CsdlEntitySet getEntitySet(FullQualifiedName entityContainer, String entitySetName){
         CsdlEntitySet entitySet = null;
         if (entityContainer.equals(ConstModel.CONTAINER)){
             if (entitySetName.equals(ConstModel.ES_BOOKS_NAME)) {
-                entitySet = getBookEntitySet();
+                CsdlEntitySet entitySet1;
+                entitySet1 = new CsdlEntitySet();
+                entitySet1.setName(ConstModel.ES_BOOKS_NAME);
+                entitySet1.setType(ConstModel.ET_BOOK_FQN);
+                // navigation
+                CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
+                navPropBinding.setTarget("Categories");
+                navPropBinding.setPath("Category");
+                List<CsdlNavigationPropertyBinding> navPropBindingList = new ArrayList<>();
+                navPropBindingList.add(navPropBinding);
+                entitySet1.setNavigationPropertyBindings(navPropBindingList);
+                entitySet = entitySet1;
             } else if (entitySetName.equals(ConstModel.ES_CATEGORIES_NAME)) {
-                entitySet = getCategoryEntitySet();
+                CsdlEntitySet entitySet1;
+                entitySet1 = new CsdlEntitySet();
+                entitySet1.setName(ConstModel.ES_CATEGORIES_NAME);
+                entitySet1.setType(ConstModel.ET_CATEGORY_FQN);
+
+                // navigation
+                CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
+                navPropBinding.setTarget("Books");
+                navPropBinding.setPath("Books");
+                List<CsdlNavigationPropertyBinding> navPropBindingList = new ArrayList<>();
+                navPropBindingList.add(navPropBinding);
+                entitySet1.setNavigationPropertyBindings(navPropBindingList);
+                entitySet = entitySet1;
             }
         }
         return entitySet;
@@ -41,7 +108,6 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
 
 
     //데이터를 제공하기 위해 OData 서비스에는 엔티티셋을 담는 엔티티컨테이너가 필요합니다.
-    //이 예제에서는 엔티티셋이 하나뿐이므로 엔티티컨테이너를 하나 생성하고 엔티티셋을 설정합니다.
     @Override
     public CsdlEntityContainer getEntityContainer(){
         //create EntitySets
@@ -58,11 +124,8 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
 
 
     //이제 이 모든 요소를 CsdlSchema에 넣어야 합니다.
-    //OData 서비스 모델에는 여러 스키마가 있을 수 있지만,
-    //대부분의 경우 스키마는 하나만 있을 것입니다.
-    //따라서 이 예제에서는 스키마 목록을 만들고 여기에 새 CsdlSchema 개체를 하나 추가합니다.
+    //스키마 목록을 만들고 여기에 새 CsdlSchema 개체를 하나 추가합니다.
     //스키마는 모든 요소를 고유하게 식별하는 역할을 하는 네임스페이스로 구성됩니다.
-    //그런 다음 요소가 스키마에 추가됩니다.
     @Override
     public List<CsdlSchema> getSchemas(){
         //create Schema
@@ -95,87 +158,4 @@ public class BookEdmProvider extends CsdlAbstractEdmProvider {
         return null;
     }
 
-    private static CsdlEntityType getCategoryEntityType() {
-        CsdlEntityType entityType;
-        // create EntityType properties
-        CsdlProperty id = new CsdlProperty().setName("ID")
-                .setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
-        CsdlProperty name = new CsdlProperty().setName("Name")
-                .setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
-
-        // create PropertyRef for Key element
-        CsdlPropertyRef propertyRef = new CsdlPropertyRef();
-        propertyRef.setName("ID");
-
-        // navigation property
-        CsdlNavigationProperty navProp = new CsdlNavigationProperty().setName("Books")
-                .setType(ConstModel.ET_BOOK_FQN).setCollection(true).setPartner("Category");
-        List<CsdlNavigationProperty> navPropList = new ArrayList<>();
-        navPropList.add(navProp);
-
-        // configure EntityType
-        entityType = new CsdlEntityType();
-        entityType.setName(ConstModel.ET_CATEGORY_NAME);
-        entityType.setProperties(Arrays.asList(id, name));
-        entityType.setKey(Arrays.asList(propertyRef));
-        entityType.setNavigationProperties(navPropList);
-        return entityType;
-    }
-
-    private static CsdlEntityType getBookEntityType() {
-        CsdlEntityType entityType;
-        CsdlProperty id = new CsdlProperty().setName("ID").setType(EdmPrimitiveTypeKind.Int64.getFullQualifiedName());
-        CsdlProperty title = new CsdlProperty().setName("Title").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
-        CsdlProperty page = new CsdlProperty().setName("Page").setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
-        CsdlProperty category = new CsdlProperty().setName("CategoryName").setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
-
-        //키 요소에 대한 PropertyRef 생성
-        CsdlPropertyRef propertyRef = new CsdlPropertyRef();
-        propertyRef.setName("ID");
-
-        //nav
-        CsdlNavigationProperty navProp = new CsdlNavigationProperty().setName("Category")
-                .setType(ConstModel.ET_CATEGORY_FQN).setNullable(false).setPartner("Books");
-        List<CsdlNavigationProperty> navPropList = new ArrayList<>();
-        navPropList.add(navProp);
-
-        //config EntityType
-        entityType = new CsdlEntityType();
-        entityType.setName(ConstModel.ET_BOOK_NAME);
-        entityType.setProperties(Arrays.asList(id, title , page, category));
-        entityType.setKey(Arrays.asList(propertyRef));
-        entityType.setNavigationProperties(navPropList);
-        return entityType;
-    }
-
-    private static CsdlEntitySet getCategoryEntitySet() {
-        CsdlEntitySet entitySet;
-        entitySet = new CsdlEntitySet();
-        entitySet.setName(ConstModel.ES_CATEGORIES_NAME);
-        entitySet.setType(ConstModel.ET_CATEGORY_FQN);
-
-        // navigation
-        CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
-        navPropBinding.setTarget("Books");
-        navPropBinding.setPath("Books");
-        List<CsdlNavigationPropertyBinding> navPropBindingList = new ArrayList<>();
-        navPropBindingList.add(navPropBinding);
-        entitySet.setNavigationPropertyBindings(navPropBindingList);
-        return entitySet;
-    }
-
-    private static CsdlEntitySet getBookEntitySet() {
-        CsdlEntitySet entitySet;
-        entitySet = new CsdlEntitySet();
-        entitySet.setName(ConstModel.ES_BOOKS_NAME);
-        entitySet.setType(ConstModel.ET_BOOK_FQN);
-        // navigation
-        CsdlNavigationPropertyBinding navPropBinding = new CsdlNavigationPropertyBinding();
-        navPropBinding.setTarget("Categories");
-        navPropBinding.setPath("Category");
-        List<CsdlNavigationPropertyBinding> navPropBindingList = new ArrayList<>();
-        navPropBindingList.add(navPropBinding);
-        entitySet.setNavigationPropertyBindings(navPropBindingList);
-        return entitySet;
-    }
 }
