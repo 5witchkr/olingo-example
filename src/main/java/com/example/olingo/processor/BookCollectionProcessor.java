@@ -83,10 +83,8 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
             entityCollection = storage.readRelateEntitySetData(edmEntitySet1, keyPredicates);
         }
 
-        //사용자가 지정한 쿼리 옵션에 따라 결과 집합을 수정합니다.
         List<Entity> entityList = entityCollection.getEntities();
         EntityCollection returnEntityCollection = new EntityCollection();
-
 
         //count handler 원래 엔티티 수를 반환하고, $top 및 $skip을 무시합니다.
         CountOption countOption = uriInfo.getCountOption();
@@ -168,6 +166,7 @@ public class BookCollectionProcessor implements EntityCollectionProcessor {
             }
         }
 
+        //사용자가 지정한 쿼리 옵션에 따라 결과 집합을 수정합니다.
         for(Entity entity : entityList){
             returnEntityCollection.getEntities().add(entity);
         }

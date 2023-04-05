@@ -1,12 +1,12 @@
 package com.example.olingo.controller;
 
 
-import com.example.olingo.processor.BookCollectionProcessor;
-import com.example.olingo.processor.BookProcessor;
-import com.example.olingo.provider.BookEdmProvider;
+import org.apache.olingo.commons.api.edm.provider.CsdlEdmProvider;
 import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.ODataHttpHandler;
 import org.apache.olingo.server.api.ServiceMetadata;
+import org.apache.olingo.server.api.processor.EntityCollectionProcessor;
+import org.apache.olingo.server.api.processor.EntityProcessor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,11 +21,11 @@ public class ODataController {
 
     protected static final String URI = "/OData";
 
-    private final BookCollectionProcessor bookCollectionProcessor;
-    private final BookProcessor bookProcessor;
-    private final BookEdmProvider bookEdmProvider;
+    private final EntityCollectionProcessor bookCollectionProcessor;
+    private final EntityProcessor bookProcessor;
+    private final CsdlEdmProvider bookEdmProvider;
 
-    public ODataController(BookCollectionProcessor bookCollectionProcessor, BookProcessor bookProcessor, BookEdmProvider bookEdmProvider) {
+    public ODataController(EntityCollectionProcessor bookCollectionProcessor, EntityProcessor bookProcessor, CsdlEdmProvider bookEdmProvider) {
         this.bookCollectionProcessor = bookCollectionProcessor;
         this.bookProcessor = bookProcessor;
         this.bookEdmProvider = bookEdmProvider;
